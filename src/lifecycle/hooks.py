@@ -47,6 +47,11 @@ class ExecutableHook(Protocol):
 class BaseExecutableHook:
     """
     Базовый класс для реализации хуков.
+
+    При переопределении методов _do_init, _do_quit, _do_error, _do_reset
+    следует возвращать HookResult.SUCCESS, HookResult.FAILURE или HookResult.FATAL.
+    Возврат FAILURE не приводит к фаталу на уровне хука, но может быть повышен
+    до FATAL группой, если хук помечен как REQUIRED.
     """
 
     dependencies: ClassVar[tuple[HookDependency, ...]] = ()
@@ -216,15 +221,31 @@ class BaseExecutableHook:
         return result
 
     def _do_init(self) -> HookResult:
+        """
+        Переопределяемый метод для логики инициализации.
+        Возвращает HookResult.SUCCESS, HookResult.FAILURE или HookResult.FATAL.
+        """
         return HookResult.SUCCESS
 
     def _do_quit(self) -> HookResult:
+        """
+        Переопределяемый метод для логики остановки.
+        Возвращает HookResult.SUCCESS, HookResult.FAILURE или HookResult.FATAL.
+        """
         return HookResult.SUCCESS
 
     def _do_reset(self) -> HookResult:
+        """
+        Переопределяемый метод для логики сброса.
+        Возвращает HookResult.SUCCESS, HookResult.FAILURE или HookResult.FATAL.
+        """
         return HookResult.SUCCESS
 
     def _do_error(self) -> HookResult:
+        """
+        Переопределяемый метод для логики обработки ошибки.
+        Возвращает HookResult.SUCCESS, HookResult.FAILURE или HookResult.FATAL.
+        """
         return HookResult.SUCCESS
 
     @property
@@ -280,6 +301,23 @@ def create_adapter(
     requirement: HookRequirement = HookRequirement.OPTIONAL,
     dependencies: Iterable[HookDependency] = (),
 ) -> ExecutableHook:
+    """
+    Создаёт адаптер хука из callback-функций.
+
+    Args:
+        name: Имя хука.
+        callbacks: Объект HookCallbacks с колбэками.
+        requirement: Требование хука (REQUIRED или OPTIONAL).
+        dependencies: Зависимости хука.
+
+    Returns:
+        ExecutableHook, готовый к использованию в группе.
+
+    Example:
+        >>> from lifecycle import HookCallbacks, create_adapter, HookResult
+        >>> cb = HookCallbacks(init=lambda: HookResult.SUCCESS)
+        >>> hook = create_adapter("my_hook", cb)
+    """
     logger.debug("Создание адаптера для хука '%s' с requirement=%s", name, requirement)
     adapter_class = type(
         "_DynamicHookAdapter",

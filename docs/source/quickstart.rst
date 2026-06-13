@@ -15,11 +15,15 @@
 
    from lifecycle import LifeCycle, create_adapter, HookCallbacks, HookResult
 
-   callbacks = HookCallbacks(
-       init=lambda: (print("Инициализация"), HookResult.SUCCESS)[1],
-       quit=lambda: (print("Завершение"), HookResult.SUCCESS)[1]
-   )
+   def on_init():
+       print("Инициализация")
+       return HookResult.SUCCESS
 
+   def on_quit():
+       print("Завершение")
+       return HookResult.SUCCESS
+
+   callbacks = HookCallbacks(init=on_init, quit=on_quit)
    hook = create_adapter("my_hook", callbacks)
    lc = LifeCycle(hooks=[hook])
 
@@ -62,7 +66,7 @@
 
 .. code-block:: python
 
-   from lifecycle import BaseExecutableHook, HookDependency, DependenceOrder, HookResult
+   from lifecycle import BaseExecutableHook, HookDependency, DependenceOrder, HookResult, LifeCycle
 
    class LoggerHook(BaseExecutableHook):
        def __init__(self, name: str):
@@ -72,8 +76,15 @@
            print(f"{self.name}: init")
            return HookResult.SUCCESS
 
-   class ApplicationHook(LoggerHook):
+   class ApplicationHook(BaseExecutableHook):
        dependencies = (HookDependency("Logger", init_order=DependenceOrder.AFTER),)
+
+       def __init__(self, name: str):
+           super().__init__(name)
+
+       def _do_init(self) -> HookResult:
+           print(f"{self.name}: init after Logger")
+           return HookResult.SUCCESS
 
    lc = LifeCycle(hooks=[LoggerHook("Logger"), ApplicationHook("App")])
    lc.initialize()  # Logger → App
@@ -88,18 +99,21 @@
    from lifecycle import create_group, SelectionMode, BaseExecutableHook, HookResult, HookContext
 
    class PrimaryHook(BaseExecutableHook):
+       def __init__(self):
+           super().__init__("primary")
        def _do_init(self):
            print("Попытка основного подключения")
            return HookResult.FAILURE
 
    class BackupHook(BaseExecutableHook):
+       def __init__(self):
+           super().__init__("backup")
        def _do_init(self):
            print("Резервное подключение")
            return HookResult.SUCCESS
 
-   group = create_group(SelectionMode.ONE, "connector",
-                        [PrimaryHook("primary"), BackupHook("backup")])
-   group.process(HookContext.INIT)   # сначала primary → неудача → backup
+   group = create_group(SelectionMode.ONE, "connector", [PrimaryHook(), BackupHook()])
+   group.process(HookContext.INIT)
 
 Использование кастомных зависимостей в разных контекстах
 --------------------------------------------------------
@@ -111,6 +125,8 @@
    from lifecycle import BaseExecutableHook, HookDependency, DependenceOrder, HookResult, LifeCycle
 
    class A(BaseExecutableHook):
+       def __init__(self, name: str):
+           super().__init__(name)
        def _do_init(self):
            print("A init")
            return HookResult.SUCCESS
@@ -126,6 +142,8 @@
                quit_order=DependenceOrder.BEFORE,  # B до A при QUIT
            ),
        )
+       def __init__(self, name: str):
+           super().__init__(name)
        def _do_init(self):
            print("B init (after A)")
            return HookResult.SUCCESS
@@ -146,12 +164,16 @@
 
    class OptionalHook(BaseExecutableHook):
        requirement = HookRequirement.OPTIONAL
+       def __init__(self, name: str):
+           super().__init__(name)
        def _do_init(self):
            print("Опциональный хук, который падает")
            return HookResult.FAILURE
 
    class RequiredHook(BaseExecutableHook):
        requirement = HookRequirement.REQUIRED
+       def __init__(self, name: str):
+           super().__init__(name)
        def _do_init(self):
            print("Обязательный хук")
            return HookResult.SUCCESS
@@ -162,3 +184,15 @@
    print(lc.state.name)  # RUNNING
 
    # А если RequiredHook вернёт FATAL – состояние станет ERROR
+   class FatalRequiredHook(BaseExecutableHook):
+       requirement = HookRequirement.REQUIRED
+       def __init__(self, name: str):
+           super().__init__(name)
+       def _do_init(self):
+           print("Обязательный хук возвращает FATAL")
+           return HookResult.FATAL
+
+   lc2 = LifeCycle(hooks=[FatalRequiredHook("fatal")])
+   success2 = lc2.initialize()
+   print(success2)  # False
+   print(lc2.state.name)  # ERROR

@@ -12,7 +12,7 @@
 
 .. code-block:: python
 
-   from lifecycle import BaseExecutableHook, HookResult, HookContext
+   from lifecycle import BaseExecutableHook, HookResult, HookRequirement
 
    class MyCustomHook(BaseExecutableHook):
        requirement = HookRequirement.REQUIRED
@@ -28,7 +28,7 @@
 Создание собственной группы
 ---------------------------
 
-Если стандартных групп (:class:`~lifecycle.groups.AllGroup`, :class:`~lifecycle.groups.OneGroup`) недостаточно, вы можете создать свою, унаследовавшись от :class:`~lifecycle.groups.BaseGroup`. Переопределите методы ``_do_init``, ``_do_quit``, ``_do_error``, ``_do_reset``. Учтите, что группа должна вызывать ``process`` у своих хуков с нужным контекстом.
+Если стандартных групп (:class:`~lifecycle.groups.AllGroup`, :class:`~lifecycle.groups.OneGroup`) недостаточно, вы можете создать свою, унаследовавшись от :class:`~lifecycle.groups.BaseGroup`. Переопределите методы ``_do_init``, ``_do_quit``, ``_do_error``, ``_do_reset``. Учтите, что группа должна вызывать :meth:`~lifecycle.hooks.BaseExecutableHook.process` у своих хуков с нужным контекстом.
 
 Пример группы, которая выполняет хуки в случайном порядке:
 
@@ -47,7 +47,33 @@
                    return HookResult.FATAL
            return HookResult.SUCCESS
 
-       # аналогично для _do_quit и др.
+       def _do_quit(self) -> HookResult:
+           hooks = self._get_ordered_hooks(HookContext.QUIT)
+           random.shuffle(hooks)
+           for hook in hooks:
+               res = hook.process(HookContext.QUIT)
+               if res == HookResult.FATAL:
+                   return HookResult.FATAL
+           return HookResult.SUCCESS
+
+       def _do_reset(self) -> HookResult:
+           # аналогично для RESET
+           hooks = self._get_ordered_hooks(HookContext.RESET)
+           random.shuffle(hooks)
+           for hook in hooks:
+               res = hook.process(HookContext.RESET)
+               if res == HookResult.FATAL:
+                   return HookResult.FATAL
+           return HookResult.SUCCESS
+
+       def _do_error(self) -> HookResult:
+           hooks = self._get_ordered_hooks(HookContext.ERROR)
+           random.shuffle(hooks)
+           for hook in hooks:
+               res = hook.process(HookContext.ERROR)
+               if res == HookResult.FATAL:
+                   return HookResult.FATAL
+           return HookResult.SUCCESS
 
 Регистрация зависимостей
 ------------------------

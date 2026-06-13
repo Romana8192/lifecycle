@@ -20,8 +20,6 @@ help:
 install:
 	uv sync
 
-sync: install
-
 install-editable:
 	uv sync --editable
 

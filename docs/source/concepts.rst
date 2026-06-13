@@ -35,8 +35,34 @@
 - ``finalize()`` – переход из ``RUNNING`` в ``STOPPED``, выполнение хуков с контекстом ``QUIT``.
 - ``reset()`` – сброс ошибок, повторная инициализация, контекст ``RESET``.
 
-Состояния
----------
+Состояния LifeCycle
+-------------------
+
+Класс :class:`~lifecycle.core.LifeCycle` имеет упрощённую модель состояний:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Состояние
+     - Описание
+   * - ``NEW``
+     - Только что создан, не инициализирован.
+   * - ``RUNNING``
+     - Нормальная работа (после успешного ``initialize()``).
+   * - ``STOPPED``
+     - Остановлен (после ``finalize()``).
+   * - ``ERROR``
+     - Произошла фатальная ошибка.
+
+Переходы возможны только через методы ``initialize()``, ``finalize()``, ``reset()``.
+При этом внутри корневой группы могут происходить более сложные переходы
+(см. состояния группы ниже).
+
+Состояния хука или группы
+-------------------------
+
+Для каждого :class:`~lifecycle.hooks.BaseExecutableHook` и :class:`~lifecycle.groups.BaseGroup`
+определены следующие состояния:
 
 .. graphviz::
 
@@ -48,14 +74,19 @@
       STOPPING -> STOPPED [label="успех"];
       STOPPING -> ERROR [label="FATAL"];
       RUNNING -> RESETTING [label="reset()"];
-      RESETTING -> RUNNING [label="успех"];
+      RESETTING -> RUNNING [label="успех (только для групп)"];
+      RESETTING -> NEW [label="успех (только для хуков)"];
       RESETTING -> ERROR [label="FATAL"];
       ERROR -> RESETTING [label="reset()"];
       STOPPED -> RESETTING [label="reset()"];
   }
 
-Переходы состояний
-------------------
+.. note::
+   После успешного ``reset()`` хук переходит в состояние ``NEW``, а группа – в ``RUNNING``.
+   Это отражено на диаграмме двумя разными переходами из ``RESETTING``.
+
+Переходы состояний LifeCycle
+----------------------------
 
 .. list-table::
    :header-rows: 1
@@ -63,21 +94,18 @@
    * - Текущее состояние
      - Операция
      - Новое состояние
-   * - NEW
+   * - ``NEW``
      - ``initialize()``
-     - RUNNING (после INIT)
-   * - NEW, STOPPED
+     - ``RUNNING``
+   * - ``NEW``, ``STOPPED``
      - ``reset()``
-     - RUNNING (после RESET)
-   * - RUNNING
+     - ``RUNNING``
+   * - ``RUNNING``
      - ``finalize()``
-     - STOPPED
-   * - любой (кроме NEW)
+     - ``STOPPED``
+   * - любой (кроме ``NEW``)
      - ``reset()``
-     - RUNNING
-   * - INITIALIZING, RUNNING, STOPPING, RESETTING
-     - (ошибка FATAL)
-     - ERROR
+     - ``RUNNING``
 
 Требования (Requirement)
 ------------------------
@@ -85,11 +113,18 @@
 - ``REQUIRED`` – хук должен выполниться успешно; при ошибке весь жизненный цикл переходит в ``ERROR``.
 - ``OPTIONAL`` – ошибка хука не прерывает выполнение, фиксируется как ``FAILURE``, но состояние остаётся ``RUNNING``.
 
+.. attention::
+   Для REQUIRED хука **любой** результат, кроме ``HookResult.SUCCESS``,
+   считается фатальным на уровне группы. Это приводит к прерыванию выполнения
+   и переводу всей группы в состояние ``ERROR``. Сам хук при этом может
+   остаться в состоянии ``NEW`` (если вернул ``FAILURE``) или перейти в ``ERROR``
+   (если выбросил исключение или вернул ``FATAL``).
+
 Зависимости (Dependency)
 ------------------------
 
 Описание отношения между двумя хуками для каждого контекста (``INIT``, ``QUIT``, ``ERROR``, ``RESET``). Возможные порядки:
 
 - ``UNORDERED`` – порядок не важен.
-- ``BEFORE`` – текущий хук выполняется **до** указанного.
+- ``BEFORE`` – текущий хук выполняется **до** указанного (см. :class:`~lifecycle.lifecycle_types.DependenceOrder`).
 - ``AFTER`` – текущий хук выполняется **после** указанного.

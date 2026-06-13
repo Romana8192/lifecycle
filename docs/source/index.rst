@@ -7,6 +7,9 @@
      <a href="https://github.com/Romana8192/lifecycle">
        <img src="https://img.shields.io/badge/GitHub-Repository-black?logo=github" alt="GitHub">
      </a>
+     <a href="https://github.com/Romana8192/lifecycle/blob/main/LICENSE">
+       <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License">
+     </a>
    </div>
 
 Библиотека для управления жизненным циклом приложения.

@@ -400,6 +400,10 @@ class BaseGroup:
         """
         Безопасно выполняет хук, перехватывая исключения.
 
+        Note:
+            Для хуков с требованием REQUIRED любой результат, отличный от SUCCESS,
+            преобразуется в FATAL, что прерывает выполнение группы.
+
         Args:
             hook: Хук для выполнения.
             context: Контекст.
@@ -452,7 +456,8 @@ class BaseGroup:
             context: Контекст (INIT, QUIT, ERROR, RESET).
 
         Returns:
-            Результат обработки.
+            Результат обработки. Для REQUIRED хуков любой не-SUCCESS результат
+            преобразуется в FATAL, что останавливает выполнение группы.
 
         Raises:
             UnknownContextError: Если контекст неизвестен.
@@ -616,7 +621,7 @@ class BaseGroup:
             for hook in ordered_quit:
                 try:
                     hook.process(HookContext.QUIT)
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:  # noqa: BLE001, PERF203
                     logger.warning(
                         "При откате хука '%s' после FATAL произошла ошибка: %s",
                         hook.name,
@@ -678,7 +683,7 @@ class BaseGroup:
             for hook in ordered_quit:
                 try:
                     hook.process(HookContext.QUIT)
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:  # noqa: BLE001, PERF203
                     logger.warning(
                         "При откате хука '%s' после FATAL при сбросе произошла ошибка: %s",
                         hook.name,
