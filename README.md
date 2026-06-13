@@ -1,4 +1,3 @@
-```markdown
 # lifecycle – управление жизненным циклом приложения
 
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)](https://python.org)
@@ -258,7 +257,6 @@ graph TD
     LifeCycleStateError --> LifeStateError
 
     LifeCycleRuntimeError --> UnknownContextError
-    LifeCycleRuntimeError --> UnwrapError
 ```
 
 | Исключение                      | Описание                                    | Пример сообщения (рус.)                                      |
@@ -319,4 +317,3 @@ mypy src/lifecycle
 - Romana8192 – [dashof72@gmail.com](mailto:dashof72@gmail.com)
 
 Вопросы и предложения принимаются через [Issues](https://github.com/Romana8192/lifecycle/issues) или по электронной почте.
-```

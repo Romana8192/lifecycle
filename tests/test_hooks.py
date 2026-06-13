@@ -43,7 +43,7 @@ class TestBaseExecutableHook:
     def test_process_init_invalid_state(self) -> None:
         hook = BaseExecutableHook("test")
         hook.process(HookContext.INIT)
-        hook._state = LifeState.ERROR
+        hook._state = LifeState.ERROR  # pyright: ignore[reportPrivateUsage] # noqa: SLF001
         result = hook.process(HookContext.INIT)
         assert result is HookResult.FAILURE
         assert hook.state is LifeState.ERROR
@@ -107,7 +107,7 @@ class TestBaseExecutableHook:
     def test_process_error(self) -> None:
         hook = BaseExecutableHook("test")
         hook.process(HookContext.INIT)
-        hook._state = LifeState.RUNNING
+        hook._state = LifeState.RUNNING  # pyright: ignore[reportPrivateUsage] # noqa: SLF001
         result = hook.process(HookContext.ERROR)
         assert result is HookResult.SUCCESS
         assert hook.state is LifeState.ERROR
@@ -188,7 +188,7 @@ class TestBaseExecutableHook:
                 raise ValueError("fail")
 
         hook = ExcHook("test")
-        hook._state = LifeState.RUNNING
+        hook._state = LifeState.RUNNING  # pyright: ignore[reportPrivateUsage] # noqa: SLF001
         result = hook.process(HookContext.ERROR)
         assert result is HookResult.FATAL
         assert hook.state is LifeState.ERROR

@@ -58,11 +58,12 @@ def demo_one_group() -> None:
         ],
     )
     result = group.process(HookContext.INIT)
-    print(f"Результат группы: {result.name} (SUCCESS, активен Y)")
+    print(f"Результат группы: {result.name} (активен Y)")
 
-    print("\n--- Повторный INIT ---")
+    print("\n--- Остановка и повторный INIT ---")
+    group.process(HookContext.QUIT)
     result2 = group.process(HookContext.INIT)
-    print(f"Результат: {result2.name} (SUCCESS, активен остаётся Y)")
+    print(f"Результат повторного INIT: {result2.name} (активен остаётся Y)")
 
 
 def demo_required_in_one_group() -> None:

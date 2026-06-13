@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 import pytest
 
 from lifecycle import (
@@ -52,7 +54,7 @@ class SimpleHook(BaseExecutableHook):
 
 
 class RequiredSimpleHook(SimpleHook):
-    requirement = HookRequirement.REQUIRED
+    requirement: ClassVar[HookRequirement] = HookRequirement.REQUIRED
 
 
 class FatalSimpleHook(SimpleHook):
@@ -204,7 +206,7 @@ class TestBaseGroup:
         h1 = SimpleHook("A", error_result=HookResult.SUCCESS)
         group = BaseGroup("test", [h1])
         group.process(HookContext.INIT)
-        group._state = LifeState.RUNNING
+        group._state = LifeState.RUNNING  # pyright: ignore[reportPrivateUsage] # noqa: SLF001
         result = group.process(HookContext.ERROR)
         assert result is HookResult.SUCCESS
         assert group.state is LifeState.ERROR
@@ -213,7 +215,7 @@ class TestBaseGroup:
         h1 = SimpleHook("A", error_result=HookResult.FAILURE)
         group = BaseGroup("test", [h1])
         group.process(HookContext.INIT)
-        group._state = LifeState.RUNNING
+        group._state = LifeState.RUNNING  # pyright: ignore[reportPrivateUsage] # noqa: SLF001
         result = group.process(HookContext.ERROR)
         assert result is HookResult.FAILURE
         assert group.state is LifeState.ERROR
@@ -376,7 +378,7 @@ class TestOneGroup:
         h1 = SimpleHook("A", error_result=HookResult.SUCCESS)
         group = OneGroup("one", [h1])
         group.process(HookContext.INIT)
-        group._state = LifeState.RUNNING
+        group._state = LifeState.RUNNING  # pyright: ignore[reportPrivateUsage] # noqa: SLF001
         result = group.process(HookContext.ERROR)
         assert result is HookResult.SUCCESS
         assert group.state is LifeState.ERROR
@@ -385,7 +387,7 @@ class TestOneGroup:
         h1 = FatalSimpleHook("A")
         group = OneGroup("one", [h1])
         group.process(HookContext.INIT)
-        group._state = LifeState.RUNNING
+        group._state = LifeState.RUNNING  # pyright: ignore[reportPrivateUsage] # noqa: SLF001
         result = group.process(HookContext.ERROR)
         assert result is HookResult.FATAL
         assert group.state is LifeState.ERROR
@@ -411,12 +413,12 @@ class TestOneGroup:
         alt = SimpleHook("alt", init_result=HookResult.SUCCESS)
         group = OneGroup("one", [opt, alt])
         group.process(HookContext.INIT)
-        assert group._active_hook is opt
+        assert group._active_hook is opt  # pyright: ignore[reportPrivateUsage] # noqa: SLF001
         opt.quit_called = False
         result = group.process(HookContext.RESET)
         assert result is HookResult.SUCCESS
         assert opt.quit_called is True
-        assert group._active_hook is not None
+        assert group._active_hook is not None  # pyright: ignore[reportPrivateUsage] # noqa: SLF001
 
     def test_reset_with_required_that_fails_on_quit(self) -> None:
         class FatalOnQuitHook(RequiredSimpleHook):
@@ -466,20 +468,24 @@ class TestCreateGroup:
 class TestBaseGroupAdvanced:
     def test_circular_dependency_raises(self) -> None:
         class HookA(BaseExecutableHook):
-            dependencies = (HookDependency("B", init_order=DependenceOrder.AFTER),)
+            dependencies: ClassVar[tuple[HookDependency, ...]] = (
+                HookDependency("B", init_order=DependenceOrder.AFTER),
+            )
 
         class HookB(BaseExecutableHook):
-            dependencies = (HookDependency("A", init_order=DependenceOrder.AFTER),)
+            dependencies: ClassVar[tuple[HookDependency, ...]] = (
+                HookDependency("A", init_order=DependenceOrder.AFTER),
+            )
 
         group = BaseGroup("circ", [HookA("A"), HookB("B")])
         with pytest.raises(CircularDependencyError):
             group.process(HookContext.INIT)
 
     def test_rollback_calls_quit_on_successful_hooks_only(self) -> None:
-        order = []
+        order: list[str] = []
 
         class TraceHook(BaseExecutableHook):
-            def __init__(self, name: str, fail_init: bool = False):
+            def __init__(self, name: str, fail_init: bool = False) -> None:
                 super().__init__(name)
                 self.fail_init = fail_init
 

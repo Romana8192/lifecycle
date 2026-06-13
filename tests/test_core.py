@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 import pytest
 
 from lifecycle import (
@@ -169,8 +171,8 @@ class TestLifeCycle:
         h = SimpleHook("good", init_ok=True)
         lc = LifeCycle(hooks=[h])
         lc.initialize()
-        lc._state = LifeState.ERROR
-        lc._root_group._state = LifeState.ERROR
+        lc._state = LifeState.ERROR  # pyright: ignore[reportPrivateUsage] # noqa: SLF001
+        lc._root_group._state = LifeState.ERROR  # pyright: ignore[reportPrivateUsage] # noqa: SLF001
         result = lc.reset()
         assert result is True
         assert lc.state is LifeState.RUNNING
@@ -187,7 +189,7 @@ class TestLifeCycle:
 
     def test_reset_with_fatal_becomes_error(self) -> None:
         class ResetFatalHook(SimpleHook):
-            requirement = HookRequirement.REQUIRED
+            requirement: ClassVar[HookRequirement] = HookRequirement.REQUIRED
 
             def _do_reset(self) -> HookResult:
                 return HookResult.FATAL
@@ -220,7 +222,7 @@ class TestLifeCycle:
 
     def test_len(self) -> None:
         lc = LifeCycle(hooks=[SimpleHook("a"), SimpleHook("b")])
-        assert len(lc) == 2
+        assert len(lc) == 2  # noqa: PLR2004
 
     def test_initialize_with_fatal_returns_false(self) -> None:
         class FatalInitHook(SimpleHook):
@@ -283,16 +285,16 @@ class TestLifeCycle:
         h2 = SimpleHook("B")
         lc = LifeCycle(hooks=[h1, h2])
         root = lc.root_group
-        order1 = root._get_ordered_hooks(HookContext.INIT)
-        assert len(order1) == 2
+        order1 = root._get_ordered_hooks(HookContext.INIT)  # pyright: ignore[reportPrivateUsage] # noqa: SLF001
+        assert len(order1) == 2  # noqa: PLR2004
         h3 = SimpleHook("C")
         lc.add_hook(h3)
-        order2 = root._get_ordered_hooks(HookContext.INIT)
-        assert len(order2) == 3
+        order2 = root._get_ordered_hooks(HookContext.INIT)  # pyright: ignore[reportPrivateUsage] # noqa: SLF001
+        assert len(order2) == 3  # noqa: PLR2004
         assert h3 in order2
         lc.remove_hook("C")
-        order3 = root._get_ordered_hooks(HookContext.INIT)
-        assert len(order3) == 2
+        order3 = root._get_ordered_hooks(HookContext.INIT)  # pyright: ignore[reportPrivateUsage] # noqa: SLF001
+        assert len(order3) == 2  # noqa: PLR2004
         assert h3 not in order3
 
     def test_lifecycle_error_in_optional_hook_returns_failure_not_fatal(self) -> None:
@@ -306,7 +308,7 @@ class TestLifeCycle:
 
     def test_lifecycle_error_in_required_hook_returns_fatal(self) -> None:
         class RequiredErrorHook(BaseExecutableHook):
-            requirement = HookRequirement.REQUIRED
+            requirement: ClassVar[HookRequirement] = HookRequirement.REQUIRED
 
             def _do_init(self) -> HookResult:
                 raise LifeCycleError("test")

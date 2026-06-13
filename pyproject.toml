@@ -22,6 +22,7 @@ requires-python = ">=3.10"
 dependencies = [
     "typeguard>=4.5.2",
 ]
+
 [project.urls]
 Homepage = "https://github.com/Romana8192/lifecycle"
 Documentation = "https://lifecycle.readthedocs.io"
@@ -43,14 +44,12 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["tests"]
 minversion = "6.0"
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
 addopts = [
     "-ra",
-    "--strict-markers",
     "--strict-config",
     "--cov=lifecycle",
     "--cov-report=term-missing",
@@ -65,7 +64,6 @@ omit = [
     "*/__pycache__/*",
     "*/tests/*",
     "*/conftest.py",
-    "*/__init__.py",
 ]
 
 [tool.coverage.report]

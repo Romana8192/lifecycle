@@ -1,3 +1,5 @@
+from typing import ClassVar, Self
+
 from lifecycle import (
     BaseExecutableHook,
     DependenceOrder,
@@ -27,14 +29,17 @@ class DatabaseHook(BaseExecutableHook):
 
 
 class ServiceHook(BaseExecutableHook):
+    dependencies: ClassVar[tuple[HookDependency, ...]]
+
+    def __new__(cls, name: str, db_hook_name: str) -> Self:  # noqa: ARG004
+        instance = super().__new__(cls)
+        cls.dependencies = (HookDependency(db_hook_name, init_order=DependenceOrder.AFTER),)
+        return instance
+
     def __init__(self, name: str, db_hook_name: str) -> None:
         super().__init__(name)
         self.db_hook_name = db_hook_name
         self.started = False
-
-    @property
-    def dependencies(self) -> tuple[HookDependency, ...]:
-        return (HookDependency(self.db_hook_name, init_order=DependenceOrder.AFTER),)
 
     def _do_init(self) -> HookResult:
         self.started = True
