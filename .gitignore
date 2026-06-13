@@ -1,0 +1,30 @@
+# Byte-compiled / optimized
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Documentation
+docs/build/
+docs/source/_build/
+
+# Packaging / egg
+*.egg-info/
+
+# ruff / mypy
+.mypy_cache/
+.ruff_cache/
+
+# Local dev files
+*.log
+
+# uv
+uv.lock
+.python-version

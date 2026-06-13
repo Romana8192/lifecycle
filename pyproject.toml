@@ -1,0 +1,98 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lifecycle"
+version = "1.0.0"
+description = "Управление жизненным циклом приложения с поддержкой хуков и зависимостей"
+readme = "README.md"
+authors = [{ name = "Romana8192", email = "dashof72@gmail.com" }]
+license = { text = "MIT" }
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Typing :: Typed",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "typeguard>=4.5.2",
+]
+[project.urls]
+Homepage = "https://github.com/Romana8192/lifecycle"
+Documentation = "https://lifecycle.readthedocs.io"
+Repository = "https://github.com/Romana8192/lifecycle.git"
+Issues = "https://github.com/Romana8192/lifecycle/issues"
+
+[dependency-groups]
+test = ["pytest>=9.0.3", "pytest-cov>=7.1.0"]
+dev = [
+    "mypy>=1.15.0",
+    "ruff>=0.9.0",
+    "sphinx>=8.1.3",
+    "sphinx-rtd-theme>=3.1.0",
+    { include-group = "test" },
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests"]
+minversion = "6.0"
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--cov=lifecycle",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-fail-under=80",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["src/lifecycle"]
+omit = [
+    "*/__pycache__/*",
+    "*/tests/*",
+    "*/conftest.py",
+    "*/__init__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+    "@abstractmethod",
+    "def __repr__",
+    "pass$",
+]
+
+[tool.ruff]
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    "docs/build",
+]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = false
+strict_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
